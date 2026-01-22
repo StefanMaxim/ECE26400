@@ -1,0 +1,199 @@
+Variable Scope:
+
+#include <stdio.h> (this is also pre-processor directive)
+
+#ifdef ZERO
+int i = 0;
+#else
+int i = 1;
+#endif
+(the above thing is called pre-processor directives)
+
+
+
+
+gcc -DZERO ex1.c -o ex1 for conditional compile, if def. (note, dont have to use zero, can be any word)
+(conditional on whether 0 is defined or not.)
+
+Remember from lecture 1, 
+compiler, assembler, linker needed to make the full code flow. GCC consists of compiler, assembler, and linker combined
+
+Where are the pre-processor directives?
+BEFORE the compiler. so really pre-processor, compiler, assembler, linker
+
+can test the above code: gcc -E ex1.c -o ex1.i (what does this look like)
+more ex1.i (shows the output after the pre-processor)(SCROLL TO THE BOTTOM) is ifdef is gone, also comment is gone
+
+what si all the ugly stuff, REMEMBER at the beginning you wrote include stdio.h.
+thus, what it did was copy the code from stdio.h on top before feeding into the compiler.
+(note: pre-processor does not do code optimization, ie if you write int i = 1+1, it will not make it 2)
+
+
+THERE SI ANOTHER WAS TO DO THIS:
+
+can include the 0 definition in our program.
+
+can do #define ZERO, which when running gcc ex1.c -o ex1 will work as well.
+
+NOTE:
+
+gcc -c ex1.c 
+gcc ex1.o -o ex1 
+
+gcc -c ex1.c 
+gcc -DZERO ex1.o ex1.o -o ex1  (THIS WILL STILL RETURN 
+1, since the DEFINE IS DONE AFTER THE PRE-PROCESSOR ALREADY ACTED.)
+
+
+
+
+
+
+Struct:
+
+datatypes in C:
+when you declare a viarable, you declare a type
+example, int. 
+
+to declare an int: int i; (who defined int? c language)
+(int, char, float, long, short, double are examples of non-user defined types)
+
+User defined datatypes?
+yes
+can do student s;
+cool, then what shoudl youwrite on teh righthand side?
+rectangle r = (?????)
+
+one way to define is via struct, to define user-defined datatypes:
+NOTE: structs have to be global scope
+
+
+typedef struct {
+    int w; //attribute
+    int h; //attribute, can be different types
+} rectangle;
+
+
+int main()
+{
+    rectangle r1;
+    r1.w = 1;
+    r1.h = 2;
+}
+
+where is w and h?
+
+Computer Memory:
+Address Content
+100      w
+101      w
+102      w
+103      w
+(separation for visualization, in reality consecutive)
+104      h
+105      h
+106      h
+107      h
+
+(the sizeof(r1) is 8 bytes total, and memory is treated as consecutive.)
+NOTE: the length of the struct is stored separate from the struct in memory 
+
+r1 == &(r1.w) so is r1 a pointer? NO its kind of like an array which decays to a pointer when used.
+
+rectangle * p if you want a pointer, but even though it has the address of the first attribute it is just a variable.
+
+
+
+&r2.h == &r2.w + 1  (what does this mean? the address of the heigh is the same as the address of width plus one)
+(remember, like with arrays, adding one means one index, which gets convered to 1 *  sizeof(struct))
+(the one will count as the sizeof the operant)
+
+
+
+is that the only way to initialize the value of the attributes?
+
+rectangle r2 = {3,4}; //order matters, ie maps to the order in which they were defined.
+
+//this way to ignore order
+rectangle r3 = {
+    .h = 5,
+    .w = 6
+}
+
+what if you give only one attribute:
+rectangle r4 = {3}; width is assigned 3 height is 0;(NOT GARBAGE, LIKE ARRAYS WHERE IT 0s)
+
+rectangle* p = malloc(sizeof(rectangle)); what is p? the address of the memory you just created
+*p = r3; //this means that you want to make a copy of r2 and store it at p;
+
+to get width and height of p.
+p -> w or p -> h to retreive the value. 
+
+
+can do < or > with structs but that will take the address and compare them, not the attributes.
+(since we dont know where each are, this is meaningless)
+
+int arr[100]; means you have 100 placeholders, index of first element 0, last element 99 (sizeof(arr)-1)
+
+can also do: rectangle arr[100];, which makes an array of rectangles (prefectly valid)
+
+
+for (int i = 0; i < 100; i++)
+{
+    arr[i].w = i+1;
+    arr[i].h = i+2;
+}
+[perfectly valid]
+
+can also have structs inside of a struct!
+
+typedef struct {
+    double x;
+    double y;
+} point;
+
+typedef struct
+{
+    int h;
+    int w;
+    point top_left;
+    point top right;
+    point bottom_left;
+    point bottom_right;
+} rectangle;
+
+rectangle r1 = {1,2,{3.0,4.0},{5.0,6.0},{7.0,8.0},{9.0,10.0}}
+
+where r1 = &(r1.h) (so is it a pointer? no bc type is rectangle of type struct, not rectangle *)
+
+
+
+
+what if in you main you have f(&f1)
+
+int f(rectangle p1)
+{
+
+}
+
+without the &, it will pass a copy of p1, meaning whatever chages you make to p1 it will only be 
+in the function scope, and not be returned.
+
+if, however you do
+int f(rectangle *p1)
+{
+
+}
+it will actually change the value.
+
+is &r1 the same as just r1.
+r1 means you pass it by value, or a copy of it, whereas &r1 will pass a pointer to the object, of type
+(struct Rectangle *)
+
+if the function has (struct rectangle bob) as parameter, then can access via bob.h or bob.want
+if the function has (struct rectangle* bob) then, you have to bob->w = 6 to set things
+
+NOTE: the dot as in rect.h is for structs and the arrow as in p->h is for pointers to structs
+
+
+

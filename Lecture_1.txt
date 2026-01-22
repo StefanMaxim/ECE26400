@@ -1,0 +1,164 @@
+GCC:
+a compiler that translate source code in c to machine code for Computer
+(technically, compiler takes it to assembly, then assembler and finally linked)
+so chain is:
+pre-processor, compiler, assembler, linker, executable
+
+
+compiler flags:
+`> gcc -std=c99 -g -Wall -Wshadow --pedantic -Wvla -Werror`
+
+std=c89 means use the 1989 standard for c
+
+-Wall means give you all the compiler warnings
+
+-Wshandow means it warns you of shadow variables, ie when a variable of the same name is defined
+in local and global scope, with that making it confusing to which you are referring
+(granted it will allways take the one in local scope, but still confusing)
+
+--pedandic means it will restrict teh c standard, so no single line comments or that type of stuff
+
+-Wvla means will warn you of any variable length arrays, enforcing that you use only fixed length ones
+
+-Werror means treating warnings as errors (ie cannot compile unless no warnings)
+
+
+
+NOTE: when compiling a file which uses code from multiple files, need to be sure the compiler knows the signature of
+the function, ie how many params and what type
+
+TO DO THIS, use a header file, essentially a file where you declare the stuff you will be using just so it knows what to look for
+
+ie when using a function in foo.c that is defined in bar.C
+
+#include bar.h
+
+
+
+HOW TO COMBINE THEM???
+
+FIRST, compile each source file separately into object files (foo.o), which is binary code, but not fully executable as
+its missing context
+
+(gcc -c foo.c) which outputs (foo.o)
+
+SECOND, we will link the compiled object files together using gcc:
+
+(gcc foo.o bar.o -o out) which combines the two object files into an executable called (out)
+
+
+
+WHOLE PIPELINE:
+C source -> preprocessed c -> assembly -> object -> linked executable
+
+gcc -E main.c -o main.i (this gets you to the pro-processed version only)
+
+gcc -E -P main.c -o main.i (this removes the line markers)
+
+gcc -S main.c -o main.s (this gives it to you in assembly)
+where:
+gcc -S -masm=intel main.c main.s (this is the intex syntax)
+
+gcc -c main.c -o main.o (the object version)
+
+gcc main.o -o main (this si the final output)
+or in one step:
+gcc main.c -o main
+
+
+
+
+NOW FOR THE CONDITIONAL COMPILATION:
+
+what to do to turn on / off different sections of code?:
+
+#ifdef DEBUG
+printf("stuff");
+#else
+print("Other stuff);
+#endif
+
+HERE: code will only execute if DEBUG is defined in the program
+to define it:
+
+either
+#define DEBUG
+or
+-DDEBUG
+(where -D flag for defining)
+
+(NOTE: all of these are called pre-processor directives, ie the stuff with # since happens before compilation)
+
+NOTE2: doesn't just have to be a print statment or a variable definition. can be entire functions
+
+
+
+
+
+NOW, onto make and Makefiles:
+makefiles lets you define commands to make your projects:
+
+[target] : [dependences] [command1]
+    [command 2] ...
+
+
+a rule target is the name of the rule.
+dependences are the files the rule depends on
+commands are what is run whe the rule is executed
+
+To fire a rule:
+1. make [target]
+or 
+2. gets called by another fired rule
+
+KEY PROCESS:
+1. if a dependency has a rule in the makefile, fire that rule first
+
+2.once all dependencies fired, check if TARGET is out of datatypes
+(what does that mean?)
+being "out of date" means that time timestamp on target is onlder than the dependencies
+(IE if target was made before the dependencies)
+(IF no file named target exists, assume out of date)
+(IF no dependencies and target exists, then up to date)
+
+3. if out of date, then execute commands
+
+
+NOTE: make without a target will just make the first target in the makefile
+
+NOTE2: also, we usually define a target named "clean" to clean up any intermediary files created during the building 
+of the projects
+
+NOTE3: can also use makefiles to test code
+
+test : all 
+    ./a.out testfile1
+    ./a.out testfile2
+
+in this case, the dependency "all" compiles your project, and seeing as there is no file called all, it will
+run it every time
+
+
+
+
+CAN also define macros in makefiles:
+DEBUG = -DDEBUG
+CFLAGS = CFLAGS = -std=89 -g -Wall -Wshadow --pedantic -Wlva -Werror
+GCC = gcc $(CFLAGS) $(DEBUG)
+(where $(macro) lets you insert in where you want)
+
+
+
+
+Common Recipies using makefiles:
+
+
+foo.o : foo.c
+    gcc -c foo.c -o foo.o 
+
+bar.o : bar.c
+    gcc -c bar.c -o bar.o 
+
+
+%.o : %.c 
+    gcc -c #< -o %@
