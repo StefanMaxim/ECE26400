@@ -1,0 +1,10 @@
+problem:
+
+given array of n elements.
+given some number k (can be greater than n)
+
+eliminate from the array the kth element, indexing at 1, being the first element
+if k is greater than n, then loop back to the front after traversed n elements.
+
+Arrays in c are just consecutive memory addresses.
+given 
