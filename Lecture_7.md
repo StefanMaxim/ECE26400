@@ -1,214 +1,125 @@
-fscanf
+# String Of Characters
 
-char arr[101];
-while (fgets(arr,100,fp) != NULL)
+char arr[] = {'x','?',' ','\0'};
+printf("%s",arr); //to print the string on the screen. string of length 5 actually has 6 elements
+
+first element in array is arr[0]
+*(&arr[0]) = *arr(since arr stored the address of the address)
+
+char* p = arr; //do this work? yes since arr is type char*(when it decays) since it points to arr[0], 
+aka holds value &arr[0]
+
+can you do p[0], p[1], ...
+yes, since anyways the preprocessor converts arr[0] to *(arr + 0) = *(&arr[0] + 0)
+(not pre-processor, but they function semantically the same)
+(the C AST does simplify the array access to a pointer arithmetic thought )
+
+**REMEMBER** *(p+1)this increments forward one BYTE.
+
+(char*)* argv = &p // in other words, you are defining a pointer to a char pointer to be equal to the address
+of p, the curent address. 
+
+WHY is this useful:
+because argv doesnt have to be a single char, it can be an array of characters.
+In others words, argv is now an array of character arrays, or an array of strings functionally. 
+Since again, only need to know the address of the first element of the array, so you can either
+have a pointer char** to a character pointer char*, whcih is pointing to a character char OR
+an array of pointers char** to an array of chars char*.
+
+basically, it is a two dimensional array.
+argv[2][3] lets you access argvs second element, dereference it, and then go to its third element.
+
+&(argv[2]) = argv + 2; //address of first element. where 
+
+**NOTE** argv has value of p, p has address, which is 8 bytes, so argv + 1 doesnt move 1 byte, rather
+8 bytes!!!
+
+what about argv[2], this has address of the first byte of some other array. *(argv[2] + 3), is address of 4th element
+here, you are shifting 3 bytes, NOT 24 because it is of the type that the pointer is pointing to , since pointing to 
+a char, it is 3*sizeof(*argv[2]) = 3
+
+
+> **NOTE**:
+(*(argv + 2))[3] is not the same as *(argv+2)[3] = *(argv + 5)
+
+WHY: *(argv+2)[3] = *(argv+2 +3) = *(argv + 5)
+
+
+OKAY, what about the difference between:
+char arr[10][20]; //here, memory allocation determined at compile time
+
+VS:
+
+char** arr = malloc(sizeof(char*) * 10);
+for(int i = 0; i < 10; i++)
 {
-
-}
-Exe: suppose page has
-(120 chars) \n
-(80 chars) \n
-(110 chars)
-
-Will first read 100/120 chars at first iteration.
-Next, read remaining 20 (why only 20: because of the /n, it will read line feed and then stop)
-Third iteration, 80 and then new line.
-Fouth 100
-Fifth 10 and \n
-
-Will not include \n in the array.
-
-
-
-## ftell
-
-by default, the file pointer is 0
-int ch = fgetc(fp);
-printf("ftell = %ld\n", ftell(fp));
-
-tells which will be read next. IE starts at 0, after reads 0 goes to 1.
-etc, will be the offset from the start of the file.
-
-after reading the null at the end, it will move the pointer again to after the null, and then return
-
-
-
-## fseek
-moves the offset in the file
-
-fseek(fp, 6, SEEK_SET); // move 6 bytes from the initial pt, (now at index 6, the 7th byte in the file)
-file pointer fp
-offset 6, by how many bytes to move
-SEEK_SET is where to start from. 
-
-fseek(fp, 6, SEEK_CUR); move 2 bytes from the current value
-fseek(fp, -1, SEEK_END); moves 1 byte before the end. SEEK_END is number of bytes (ie one past the last index)
-
-
-## fread / fwrite 
-Used for binary reading
-
-
-
-
-
-# Heap
-
-int* arr = malloc(5 * sizeof(int));
-//same as int arr[5]; malloc keeps track of the fact that there is type int[5], and returns the start address of this object
-
-free(arr); (this proves it must have a table telling you what it it)
-
-Difference:
-first arr is a pointer to an int in memory (or at least it functions like it)
-
-second array is type int[5], not a pointer, but decays to a pointer. (in the syntax table it shows up as type int[5])
-
-sizeof(arr) = 8 (integer pointer)
-sizeof(arr) = 4*5 = 20 (because it is type int[5])
-
-if(arr == FULL)
-{
-    return EXIT_FAILURE;
+    arr[i] = malloc(sizeof(char) * 20);
 }
 
+here, memory allocation is done at runtime. NOTE: you have to use malloc since given some pointer
+*(arr + 1) will most likely segfault if you havent allocated memory for it.
 
-Segments of Code:
-Stack Segment, Heap Segment, Data segment, Code Segment.
-Stack is upside down.
+malloc will return a void pointer, which is still 8 bytes, which it read into the array values.
 
-int* ptr = malloc();
-prt has address in heap memory space.
+Note: when there is only one statment in the body of a for loop, you do not have to use curly brances
 
-global variables are in teh data segments.
+what about double for loops:
 
-static variables are in a function body, yet it is in teh .bss section.
+for(int i = 0; i < 20; i++)
+    (SINGLE)
+    for(int i = 0; i < 20; i++)
+        printf("hello world");
+        printf("wassup");
+    (STATMENT)
 
-void f()
+this is legal, because a for loop statment is allways a single statment.(SAME WITH IFs)
+
+
+
+char** argv= malloc(sizeof(char*) * 10);
+now, there are 10 consecutive 8-byte buckets, with a head of void pointer that is now equal to the char** argv.
+
+argv[0] is the value at the first element of the array, ie the address of one of the strings
+&argv[0] is the address of the first byte of the first value of the array
+(this is also equal to argv, or at least it will decay to it)
+
+sizeof(argv + 0)// still 8 bytes **CONFUSING**
+This is the same as asking sizeof(char**), which is just 8 bytes.
+
+
+
+## Command Line Arguments;
+
+
+./a.out abc def 123
+
+in the argv, the first element is pointing to ./a.out\0, second to abc\0, third def\0
+of course, it pointing to the address of the first bytes of these strings.
+
+argc value is 4, the number of entries
+
+int main(int argc, char** argv)
 {
-    static int x =0;
-    x++;
-    printf("%d",x);
-}
-int main()
-{
-    f();
-    f();
-    f();
-}
+    int i;
+    printf("argc = %d\n",argc);
 
-> **NOTE**
 
-Static = remember its value???(WTF i thouht it was in read-only memory)
 
-static local variable will be initialized only once. 
-for this case, do not write inside of the box.
-
-HOWEVER: x is still a local variable, just persistent
-
-static vs global:
-global = global lifetime, global scope
-static = global lifetime, local scope
-
-Note: multiple symbol tables, containing
-file scope, function scope, and block scope symbol tables. 
-Thus, when 
-
-When the compiler sees an identifier:
-
-It starts in the current scope
-
-If not found, it walks outward (block → function → file)
-
-If still not found → compile-time error
-
-So for a static local, lookup simply never finds it outside the function body.
-
-NOTE: USUALLY, THEY HAVE A STACK/TREE OF SCOPES, NOT SEPARATE TABLES
-
-(scope vs linkage): scope = where can I name this variable, linkage = can other translational units refer to this here.
-
-# 2D Arrays:
-
-int **arr = malloc(r * sizeof(int*));
-
-for(int i = 0; i < r; i++)
-{
-    arr[i] = malloc(c * sizeof(int));
+    return EXIT_SUCCESS; //instead of return 0, use EXIT_SUCCESS, defined in stdlib.h
 }
 
-// HAVE TO FREE IN ORDER YOU ALLOCATED:
-for(int i = 0; i < r; i++)
-{
-    free(arr[i]);
-}
-free(arr);
+#define EXIT_SUCCESS 0
 
 
-typedef struct{
-    int L;
-    int w;
-    point p;
-} rectangle;
+remember:
+ex1.c - > ex1.i (in here will find the #define EXIT_SUCCESS 0)
 
-typedef struct{
-    int x;
-    int y;
-} point;
+DRAW a stack to understand how stuff works.
+answer: nothing changes, even though pointers are used, since you are not dereferencing them, just passing
+their values.
 
+instead pass int* and then int**.
+(review all this stuff asap)
 
-(NOTE: BYTES ARE NOT CONSECUTIVE, SO ITS EASIER FOR CPU TO READ)
-rectangle* r1 = malloc(sizeof(rectangle));
-r1->L = 1;
-r1->w = 2;
-r1->p->y = 4;
-
-
-rectangle r = ...
-r.L = 
-
-rectangle* r = ...
-r->L *(r).L
-
-
-rectangle* construct_rectangle(int L, int W, char* name)
-{
-    rectangle* r = malloc(sizeof(rectangle));
-
-    if (r == NULL)
-    {
-        return NULL;
-    }
-
-    r->L = L;
-    r->W = W;
-    r->name = malloc(sizeof(char) * (strlen(name) + 1));
-    if (r->name == NULL)
-    {
-        free(r);
-        return NULL;
-    }
-    strcpy(r->name, name);
-    return r;
-}
-
-## destruct
-
-void destruct_rectangle(rectangle* r)
-{
-    free(r->name);
-    free(r);
-}
-
-rectangle* copy_rectangle(rectangle* r)
-{
-    return construct_rectangle(r->L, r->W, r->name);
-}
-
-rectangle* replace_rectangle(rectangle* r1, rectangle* r2)
-{
-    destruct_rectangle(r1);
-    return copy_rectangle(r2);
-}
-
-r3 = replace_rectangle(r3,r2); // will destroy the r3, and replace with r2.
+to print out 2 insteaf of 1, pass down a chain of pointers down the functions
+for xyz, pass down pointer to a pointer of type char. 
